@@ -11,6 +11,7 @@ L'API est construite avec les technologies suivantes :
 * Stripe (pour les paiements)
 * PHP (version 8.1)
 * PostgreSQL ( version 15.5 pour la base de données )
+* Swagger (ou OpenAPI) pour la documentation de l'API :
 
 Les routeurs suivants sont implémentés :
 
