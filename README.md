@@ -27,3 +27,10 @@ Les requêtes et les réponses sont formatées en JSON.
 La sécurité est assurée par l'authentification en fonction des rôles (utilisateurs, administrateurs). Les utilisateurs peuvent créer, lire, mettre à jour et supprimer leurs propres informations. Les administrateurs ont accès à toutes les fonctionnalités de l'API.
 
 ## Avant de Commencer
+
+### Pre-requisites
+
+* [Composer](https://getcomposer.org/)
+* [Node.js](https://nodejs.org/en/download/) et [npm](https://www.npmjs.com/get-npm)
+* [Symfony CLI](https://symfony.com/download)
+* Docker (facultatif, mais recommander en production)
