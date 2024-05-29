@@ -49,3 +49,9 @@ npm install
 ### Création de la base de donnée
 
 Créez une base de donnée et un utilisateur. Puis configurez là au niveau de votre fichier .env
+
+### Exécutez les migrations de l'application
+
+php bin/console doctrine:migrations:migrate --no-interaction
+php bin/console doctrine:migrations:diff --no-interaction
+php bin/console doctrine:migrations:migrate --no-interaction
