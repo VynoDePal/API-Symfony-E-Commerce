@@ -42,9 +42,9 @@ La sécurité est assurée par l'authentification en fonction des rôles (utilis
 
 Ouvrez un terminal et  cloner le dépôt
 
-cd app
-composer install
-npm install
+* cd app
+* composer install
+* npm install
 
 ### Création de la base de donnée
 
