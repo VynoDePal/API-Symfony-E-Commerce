@@ -10,6 +10,7 @@ L'API est construite avec les technologies suivantes :
 * Twig (3.3)
 * Stripe (pour les paiements)
 * PHP (version 8.1)
+* PostgreSQL ( version 15.5 pour la base de données )
 
 Les routeurs suivants sont implémentés :
 
@@ -34,3 +35,17 @@ La sécurité est assurée par l'authentification en fonction des rôles (utilis
 * [Node.js](https://nodejs.org/en/download/) et [npm](https://www.npmjs.com/get-npm)
 * [Symfony CLI](https://symfony.com/download)
 * Docker (facultatif, mais recommander en production)
+
+## Prise en main
+
+### Installation des packages
+
+Ouvrez un terminal et  cloner le dépôt
+
+cd app
+composer install
+npm install
+
+### Création de la base de donnée
+
+Créez une base de donnée et un utilisateur. Puis configurez là au niveau de votre fichier .env
