@@ -52,6 +52,6 @@ Créez une base de donnée et un utilisateur. Puis configurez là au niveau de v
 
 ### Exécutez les migrations de l'application
 
-php bin/console doctrine:migrations:migrate --no-interaction
-php bin/console doctrine:migrations:diff --no-interaction
-php bin/console doctrine:migrations:migrate --no-interaction
+* php bin/console doctrine:migrations:migrate --no-interaction
+* php bin/console doctrine:migrations:diff --no-interaction
+* php bin/console doctrine:migrations:migrate --no-interaction
