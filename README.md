@@ -17,7 +17,7 @@ Les routeurs suivants sont implémentés :
 * /api/products (GET, POST, PUT, DELETE) : gestion des produits
 * /api/products/{id} (GET, PUT, DELETE) : gestion d'un produit spécifique
 * /api/users (GET, POST, PUT, DELETE) : gestion des utilisateurs
-* /users/{id} (GET, PUT, DELETE) : gestion d'un utilisateur spécifique
+* /api/users/{id} (GET, PUT, DELETE) : gestion d'un utilisateur spécifique
 * /api/orders (GET, POST, PUT, DELETE) : gestion des commandes
 * /api/orders/{id} (GET, PUT, DELETE) : gestion d'une commande spécifique
 * /stripe/checkout-sessions (GET, POST) : création d'une session de paiement Stripe
