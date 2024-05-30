@@ -30,3 +30,10 @@ node_modules
 ###> lexik/jwt-authentication-bundle ###
 /config/jwt/*.pem
 ###< lexik/jwt-authentication-bundle ###
+
+# ignore tests
+/tests/
+# ignore tests/**
+/tests/**
+# ignore tests/*.php
+/tests/*.php
