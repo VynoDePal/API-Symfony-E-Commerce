@@ -5,12 +5,12 @@ API-Symfony-E-Commerce est un projet de création d'une API pour un e-commerce a
 
 L'API est construite avec les technologies suivantes :
 
-* Symfony (6.4.7)
+* Symfony (7.1.0)
 * Doctrine (ORM)
 * Twig (3.3)
 * Stripe (pour les paiements)
-* PHP (version 8.1)
-* PostgreSQL ( version 15.5 pour la base de données )
+* PHP (version 8.3)
+* PostgreSQL ( version 16 pour la base de données )
 * Swagger (ou OpenAPI) pour la documentation de l'API :
 
 Les routeurs suivants sont implémentés :
