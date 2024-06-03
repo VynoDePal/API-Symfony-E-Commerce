@@ -16,14 +16,18 @@ use Symfony\Component\Serializer\Normalizer\NormalizerInterface;
 use Nelmio\ApiDocBundle\Annotation\Model;
 use OpenApi\Attributes as OA;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\HttpFounfation\Exception\JsonException;
+use Psr\Log\LoggerInterface;
 
 class ProductApiController extends AbstractController
 {
     private UserService $userService;
+    private LoggerInterface $logger;
 
-    public function __construct(UserService $userService)
+    public function __construct(UserService $userService, LoggerInterface $logger)
     {
         $this->userService = $userService;
+        $this->logger = $logger;
     }
 
     /**
@@ -35,14 +39,19 @@ class ProductApiController extends AbstractController
     #[OA\Response(response: 404, description: 'Product not found')]
     public function getProducts(ProductRepository $productRepository, NormalizerInterface $normalizer): Response
     {
-        $products = $productRepository->findAll();
+        try {
+            $products = $productRepository->findAll();
+            /**
+             * Normalise les données des produits au format JSON
+             */
+            $serializedProducts = $normalizer->normalize($products, 'json', ['groups' => 'product:read']);
+            $this->logger->info('Liste des produits');
 
-        /**
-         * Normalise les données des produits au format JSON
-         */
-        $serializedProducts = $normalizer->normalize($products, 'json', ['groups' => 'product:read']);
-
-        return $this->json($serializedProducts);
+            return $this->json($serializedProducts);
+        } catch (\Exception $e) {
+            $this->logger->error('Erreur dans la récupération des produits : ' . $e->getMessage());
+            return $this->json(['error' => 'Une erreur s\'est produite lors de la récupération des produits.'], Response::HTTP_INTERNAL_SERVER_ERROR);
+        }
     }
 
     /**
@@ -54,17 +63,23 @@ class ProductApiController extends AbstractController
     #[OA\Response(response: 404, description: 'Product not found')]
     public function getProduct(ProductRepository $productRepository, NormalizerInterface $normalizer, string $id): Response
     {
-        $product = $productRepository->find($id);
+        try {
+            $product = $productRepository->find($id);
 
-        if (!$product) {
-            return $this->json([
-                'error' => 'Product not found'
-            ], 404);
+            if (!$product) {
+                $this->logger->warning('Produit n°' . $id . ' non trouvé');
+                return $this->json([
+                    'error' => 'Product not found'
+                ], 404);
+            }
+
+            $serializedProduct = $normalizer->normalize($product, 'json', ['groups' => 'product:read']);
+            $this->logger->info('Les détails du produit n°' . $id . ' ont été recherchés.');
+            return $this->json($serializedProduct);
+        } catch (\Exception $e) {
+            $this->logger->error('Erreur dans la recherche du produit n°' . $id . ' : ' . $e->getMessage());
+            return $this->json(['error' => 'Une erreur s\'est produite lors de la recherche du produit.'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
-
-        $serializedProduct = $normalizer->normalize($product, 'json', ['groups' => 'product:read']);
-
-        return $this->json($serializedProduct);
     }
 
     /**
@@ -80,48 +95,63 @@ class ProductApiController extends AbstractController
     // #[OA\Security(name: "Bearer")]
     public function addProduct(Request $request, StripeService $stripeService, NormalizerInterface $normalizer, EntityManagerInterface $entityManager): Response
     {
-        $data = json_decode($request->getContent(), true);
+        try {
+            $data = json_decode($request->getContent(), true);
 
-        // Utilisation du service pour obtenir l'utilisateur
-        $result = $this->userService->getUserFromRequest($request);
-        if ($result instanceof JsonResponse) {
-            return $result;
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                throw new JsonException('Invalid JSON');
+            }
+
+            $result = $this->userService->getUserFromRequest($request);
+            if ($result instanceof JsonResponse) {
+                return $result;
+            }
+
+            $user = $result;
+
+            $product = new Product();
+            $product->setName($data['name']);
+            $product->setDescription($data['description']);
+            $product->setPhotoName($data['photoName']);
+            $product->setPrice($data['price']);
+            $product->setIsAvailable($data['isAvailable']);
+
+            /**
+             * Persistance de l'entité produit dans la base de données
+             */
+            $entityManager->persist($product);
+            $entityManager->flush();
+
+            /**
+             * Création du produit Stripe
+             */
+            $stripeProduct = $stripeService->createProduct($product);
+            $product->setStripeProductId($stripeProduct->id);
+
+            /**
+             * Création du prix Stripe
+             */
+            $stripePrice = $stripeService->createPrice($product);
+            $product->setStripePriceId($stripePrice->id);
+
+            /**
+             * Mise à jour de l'entité produit dans la base de données
+             */
+            $entityManager->persist($product);
+            $entityManager->flush();
+
+            $this->logger->info('Produit n°' . $product->getId() . ' ajouté.');
+            return $this->json($normalizer->normalize($product, 'json', ['groups' => 'product:read']), Response::HTTP_CREATED);
+        } catch (\JsonException $e) {
+            $this->logger->warning('Invalid JSON: ' . $e->getMessage());
+            return $this->json(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
+        } catch (\Stripe\Exception\ApiErrorException $e) {
+            $this->logger->error('Stripe API error: ' . $e->getMessage());
+            return $this->json(['error' => 'Stripe API error: ' . $e->getMessage()], Response::HTTP_INTERNAL_SERVER_ERROR);
+        } catch (\Exception $e) {
+            $this->logger->error('Erreur lors de la création du produit : ' . $e->getMessage());
+            return $this->json(['error' => 'Une erreur s\'est produite lors de la création du produit.'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
-
-        $user = $result;
-
-        $product = new Product();
-        $product->setName($data['name']);
-        $product->setDescription($data['description']);
-        $product->setPhotoName($data['photoName']);
-        $product->setPrice($data['price']);
-        $product->setIsAvailable($data['isAvailable']);
-
-        /**
-         * Persistance de l'entité produit dans la base de données
-         */
-        $entityManager->persist($product);
-        $entityManager->flush();
-
-        /**
-         * Création du produit Stripe
-         */
-        $stripeProduct = $stripeService->createProduct($product);
-        $product->setStripeProductId($stripeProduct->id);
-
-        /**
-         * Création du prix Stripe
-         */
-        $stripePrice = $stripeService->createPrice($product);
-        $product->setStripePriceId($stripePrice->id);
-
-        /**
-         * Mise à jour de l'entité produit dans la base de données
-         */
-        $entityManager->persist($product);
-        $entityManager->flush();
-
-        return $this->json($normalizer->normalize($product, 'json', ['groups' => 'product:read']), Response::HTTP_CREATED);
     }
 
     /**
@@ -135,52 +165,65 @@ class ProductApiController extends AbstractController
     // #[OA\Security(name: 'Bearer')]
     public function modifyProduct(Request $request, int $id, EntityManagerInterface $entityManager): Response
     {
-        $data = json_decode($request->getContent(), true);
+        try {
+            $data = json_decode($request->getContent(), true);
 
-        // Utilisation du service pour obtenir l'utilisateur
-        $result = $this->userService->getUserFromRequest($request);
-        if ($result instanceof JsonResponse) {
-            return $result;
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                throw new JsonException('Invalid JSON');
+            }
+            // Utilisation du service pour obtenir l'utilisateur
+            $result = $this->userService->getUserFromRequest($request);
+            if ($result instanceof JsonResponse) {
+                return $result;
+            }
+
+            $user = $result;
+
+            $product = $entityManager->getRepository(Product::class)->find($id);
+
+            if (!$product) {
+                $this->logger->warning('Produit n°' . $id . ' non trouvé');
+                return $this->json([
+                    'error' => 'Product not found'
+                ], Response::HTTP_NOT_FOUND);
+            }
+
+            if (isset($data['name'])) {
+                $product->setName($data['name']);
+            }
+            if (isset($data['description'])) {
+                $product->setDescription($data['description']);
+            }
+            if (isset($data['photo'])) {
+                $product->setPhoto($data['photo']);
+            }
+            if (isset($data['price'])) {
+                $product->setPrice($data['price']);
+            }
+            if (isset($data['isAvailable'])) {
+                $product->setIsAvailable($data['isAvailable']);
+            }
+
+            $entityManager->flush();
+
+            $responseData = [
+                'id' => $product->getId(),
+                'name' => $product->getName(),
+                'description' => $product->getDescription(),
+                'photo' => $product->getPhoto(),
+                'price' => $product->getPrice(),
+                'isAvailable' => $product->isAvailable(),
+            ];
+
+            $this->logger->info('Produit n°' . $id . ' modifié');
+            return $this->json($responseData, Response::HTTP_OK);
+        } catch (\JsonException $e) {
+            $this->logger->warning('Invalid JSON: ' . $e->getMessage());
+            return $this->json(['error' => $e->getMessage()], Response::HTTP_BAD_REQUEST);
+        } catch (\Exception $e) {
+            $this->logger->error('Erreur lors de la modification du produit : ' . $e->getMessage());
+            return $this->json(['error' => 'Une erreur s\'est produite lors de la modification du produit.'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
-
-        $user = $result;
-
-        $product = $entityManager->getRepository(Product::class)->find($id);
-
-        if (!$product) {
-            return $this->json([
-                'error' => 'Product not found'
-            ], Response::HTTP_NOT_FOUND);
-        }
-
-        if (isset($data['name'])) {
-            $product->setName($data['name']);
-        }
-        if (isset($data['description'])) {
-            $product->setDescription($data['description']);
-        }
-        if (isset($data['photo'])) {
-            $product->setPhoto($data['photo']);
-        }
-        if (isset($data['price'])) {
-            $product->setPrice($data['price']);
-        }
-        if (isset($data['isAvailable'])) {
-            $product->setIsAvailable($data['isAvailable']);
-        }
-
-        $entityManager->flush();
-
-        $responseData = [
-            'id' => $product->getId(),
-            'name' => $product->getName(),
-            'description' => $product->getDescription(),
-            'photo' => $product->getPhoto(),
-            'price' => $product->getPrice(),
-            'isAvailable' => $product->isAvailable(),
-        ];
-
-        return $this->json($responseData, Response::HTTP_OK);
     }
 
     /**
@@ -192,25 +235,31 @@ class ProductApiController extends AbstractController
     // #[OA\Security(name: 'Bearer')]
     public function deleteProduct(Request $request, ProductRepository $productRepository, int $id, EntityManagerInterface $entityManager): Response
     {
-        // Utilisation du service pour obtenir l'utilisateur
-        $result = $this->userService->getUserFromRequest($request);
-        if ($result instanceof JsonResponse) {
-            return $result;
+        try {
+            $result = $this->userService->getUserFromRequest($request);
+            if ($result instanceof JsonResponse) {
+                return $result;
+            }
+
+            $user = $result;
+
+            $product = $productRepository->find($id);
+
+            if (!$product) {
+                $this->logger->warning('Produit n°' . $id . ' non trouvé');
+                return $this->json([
+                    'error' => 'Product not found'
+                ], Response::HTTP_NOT_FOUND);
+            }
+
+            $entityManager->remove($product);
+            $entityManager->flush();
+
+            $this->logger->info('Produit n°' . $id . ' supprimé');
+            return new Response('', Response::HTTP_NO_CONTENT);
+        } catch (\Exception $e) {
+           $this->logger->error('Erreur lors de la suppression du produit : ' . $e->getMessage());
+           return $this->json(['error' => 'Une erreur s\'est produite lors de la suppression du produit.'], Response::HTTP_INTERNAL_SERVER_ERROR);
         }
-
-        $user = $result;
-
-        $product = $productRepository->find($id);
-
-        if (!$product) {
-            return $this->json([
-                'error' => 'Product not found'
-            ], Response::HTTP_NOT_FOUND);
-        }
-
-        $entityManager->remove($product);
-        $entityManager->flush();
-
-        return new Response('', Response::HTTP_NO_CONTENT);
     }
 }
