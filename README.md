@@ -17,17 +17,22 @@ API-Symfony-E-Commerce est une API pour gérer un site de commerce électronique
 
 * Produits
     * `/api/products` (GET, POST, PUT, DELETE)
-* /api/products/{id} (GET, PUT, DELETE) : gestion d'un produit spécifique
-* /api/users (GET, POST, PUT, DELETE) : gestion des utilisateurs
-* /api/users (GET, PUT, DELETE) : gestion d'un utilisateur spécifique
-* /api/orders (GET, POST, PUT, DELETE) : gestion des commandes
-* /api/orders/{id} (GET, PUT, DELETE) : gestion d'une commande spécifique
-* /stripe/checkout-sessions (GET, POST) : création d'une session de paiement Stripe
-* /stripe/success (GET) : traitement d'une session de paiement Stripe
+    * `/api/products/{id}` (GET, PUT, DELETE)
+* Utilisateurs
+    * `/api/users` (GET, POST, PUT, DELETE)
+    * `/api/users` (GET, PUT, DELETE)
+* Commandes
+    * `/api/orders` (GET, POST, PUT, DELETE)
+    * `/api/orders/{id}` (GET, PUT, DELETE)
+* Paiements Stripe
+    * `/stripe/checkout-sessions` (GET, POST)
+    * `/stripe/success` (GET)
 
-Les requêtes et les réponses sont formatées en JSON.
+Les requêtes et réponses sont format JSON.
 
-La sécurité est assurée par l'authentification en fonction des rôles (utilisateurs, administrateurs). Les utilisateurs peuvent créer, lire, mettre à jour et supprimer leurs propres informations. Les administrateurs ont accès à toutes les fonctionnalités de l'API.
+## Sécurité
+
+L'authentification est basée sur des rôles (utilisateurs, administrateurs). Les utilisateurs peuvent gérer leurs informations personnelles tandis que les administrateurs ont accès à toutes les fonctionnalités.
 
 ## Avant de Commencer
 
@@ -36,30 +41,29 @@ La sécurité est assurée par l'authentification en fonction des rôles (utilis
 * [Composer](https://getcomposer.org/)
 * [Node.js](https://nodejs.org/en/download/) et [npm](https://www.npmjs.com/get-npm)
 * [Symfony CLI](https://symfony.com/download)
-* Docker (facultatif, mais recommander en production)
+* Docker (optionnel,recommandé pour la production)
 
 ## Prise en main
 
-### Installation des packages
+### 1. Installation
 
-Ouvrez un terminal et  cloner le dépôt
+Cloner le dépôt et installer les dépendances
 
+* git clone https://github.com/VynoDePal/API-Symfony-E-Commerce
 * cd app
 * composer install
 * npm install
 
-### Création de la base de donnée
+### 2. Configuration de la Base de Données
 
-Créez une base de donnée et un utilisateur. Puis configurez là au niveau de votre fichier .env
+Créez une base de données et un utilisateur, puis configurez le fichier `.env` en conséquence.
 
-### Exécutez les migrations de l'application
+### 3. Exécuter les Migrations
 
 * php bin/console doctrine:migrations:migrate --no-interaction
 * php bin/console doctrine:migrations:diff --no-interaction
 * php bin/console doctrine:migrations:migrate --no-interaction
 
-### Lancer l'API
-
-Dans votre terminal, taper la commande suivante pour le lancer le server de l'API :
+### Lancer le Serveur
 
 * symfony serve
