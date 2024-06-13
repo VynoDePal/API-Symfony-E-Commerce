@@ -1,21 +1,22 @@
 # API-Symfony-E-Commerce
 ========================
 
-API-Symfony-E-Commerce est un projet de création d'une API pour un e-commerce avec Symfony. Le projet consiste à créer une API qui permet de gérer les produits, les utilisateurs, les commandes et les paiements.
+API-Symfony-E-Commerce est une API pour gérer un site de commerce électronique, utilisant le framework Symfony. Cette API permet la gestion des produits, des utilisateurs, des commandes et des paiements.
 
-L'API est construite avec les technologies suivantes :
+# Technologies Utilisées
 
 * Symfony (7.1.0)
 * Doctrine (ORM)
-* Twig (3.3)
-* Stripe (pour les paiements)
-* PHP (version 8.3)
-* PostgreSQL ( version 16 pour la base de données )
-* Swagger (ou OpenAPI) pour la documentation de l'API :
+* Twig (v3.3)
+* Stripe (paiements)
+* PHP (v8.3)
+* PostgreSQL (v16)
+* Swagger/OpenAPI (documentation)
 
-Les routeurs suivants sont implémentés :
+# Routes de l'API
 
-* /api/products (GET, POST, PUT, DELETE) : gestion des produits
+* Produits
+    * `/api/products` (GET, POST, PUT, DELETE)
 * /api/products/{id} (GET, PUT, DELETE) : gestion d'un produit spécifique
 * /api/users (GET, POST, PUT, DELETE) : gestion des utilisateurs
 * /api/users (GET, PUT, DELETE) : gestion d'un utilisateur spécifique
