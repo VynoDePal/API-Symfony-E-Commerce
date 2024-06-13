@@ -36,6 +36,7 @@
         "symfony/process": "7.*",
         "symfony/property-access": "7.*",
         "symfony/property-info": "7.*",
+        "symfony/resend-mailer": "7.*",
         "symfony/runtime": "7.*",
         "symfony/security-bundle": "7.*",
         "symfony/serializer": "7.*",
