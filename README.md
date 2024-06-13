@@ -3,7 +3,7 @@
 
 API-Symfony-E-Commerce est une API pour gérer un site de commerce électronique, utilisant le framework Symfony. Cette API permet la gestion des produits, des utilisateurs, des commandes et des paiements.
 
-# Technologies Utilisées
+## Technologies Utilisées
 
 * Symfony (7.1.0)
 * Doctrine (ORM)
@@ -13,7 +13,7 @@ API-Symfony-E-Commerce est une API pour gérer un site de commerce électronique
 * PostgreSQL (v16)
 * Swagger/OpenAPI (documentation)
 
-# Routes de l'API
+## Routes de l'API
 
 * Produits
     * `/api/products` (GET, POST, PUT, DELETE)
